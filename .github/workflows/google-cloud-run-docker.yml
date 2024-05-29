@@ -72,10 +72,8 @@ jobs:
         with:
           project_id: 'java-with-db-terraform'
           token_format: access_token
+          service_account: 'my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com'
           workload_identity_provider: 'projects/198800315981/locations/global/workloadIdentityPools/github/providers/my-repo' 
-          
-      - name : Show output
-        run : echo ${{steps.auth.outputs}}
 
       # BEGIN - Docker auth and build (NOTE: If you already have a container image, these Docker steps can be omitted)
 

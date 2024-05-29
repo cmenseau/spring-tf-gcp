@@ -68,7 +68,7 @@ jobs:
 
       - name: Google Auth
         id: auth
-        uses: 'google-github-actions/auth@v1'
+        uses: 'google-github-actions/auth@v2'
         with:
           project_id: 'java-with-db-terraform'
           workload_identity_provider: 'projects/198800315981/locations/global/workloadIdentityPools/github/providers/my-repo' 

@@ -1,0 +1,39 @@
+services:
+
+  todo-db:
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    # set shared memory limit when using docker-compose
+    shm_size: 128mb
+    # or set shared memory limit when deploy via swarm stack
+    #volumes:
+    #  - type: tmpfs
+    #    target: /dev/shm
+    #    tmpfs:
+    #      size: 134217728 # 128*2^20 bytes = 128Mb
+    environment:
+      - 'POSTGRES_USER=myuser'
+      - 'POSTGRES_DB=todo_db'
+      - 'POSTGRES_PASSWORD=secret'
+    volumes:
+      - ./docker-entrypoint-initdb.d/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "5433:5433"
+  
+  todo-app-java:
+    #image: spring-boot-complete
+    build: .
+    image: todo-app-spring-boot
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - MYAPP_JDBC_URL=jdbc:postgresql://todo-db:5432/todo_db
+      - MYAPP_JDBC_USER=myuser
+      - MYAPP_JDBC_PASS=secret

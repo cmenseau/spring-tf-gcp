@@ -66,6 +66,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Run tests
+        id: test
+        run: cd testing && docker compose up
+
       - name: Google Auth
         id: auth
         uses: 'google-github-actions/auth@v2'

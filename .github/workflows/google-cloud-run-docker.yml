@@ -68,7 +68,9 @@ jobs:
 
       - name: Run tests
         id: test
-        run: cd testing && docker compose up
+        run: |-
+          docker run --name local-postgres -p 5432:5432 -e POSTGRES_USER=cycy -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_DB=todo_db -v ./docker-entrypoint-initdb.d/init.sql:/docker-entrypoint-initdb.d/init.sql -d postgres
+          docker build --progress=plain --no-cache -f testing/Dockerfile . --add-host host.docker.internal:host-gateway
 
       - name: Google Auth
         id: auth

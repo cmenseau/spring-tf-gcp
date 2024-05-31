@@ -31,6 +31,6 @@ public class HelloControllerTest {
 	public void getTodosDb() throws Exception {
 		mvc.perform(MockMvcRequestBuilders.get("/todos-db").accept(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(content().string(equalTo("[\"Homework\",\"Hairdresser apointment\",\"Yoga class\"]")));
+				.andExpect(content().string(equalTo("[\"Homework\",\"WHATEVER\",\"Hairdresser apointment\",\"Yoga class\"]")));
 	}
 }

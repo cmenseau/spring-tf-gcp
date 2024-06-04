@@ -52,7 +52,10 @@ env:
   PROJECT_ID: "java-with-db-terraform" # TODO: update Google Cloud project id
   GAR_LOCATION: "us-east1" # TODO: update Artifact Registry location
   REPOSITORY: todo-app-image-repo 
-  SERVICE: whatever # TODO: update Cloud Run service name
+  SERVICE: todo-app-java # TODO: update Cloud Run service name
+  GH_BRANCH_NAME: ${{ github.ref_name }} 
+  GH_REPO_NAME: ${{ github.repository }}
+
   # REGION: "us-east1" # TODO: update Cloud Run service region
 
 jobs:
@@ -95,11 +98,8 @@ jobs:
 
       - name: Build and Push Container
         run: |-
-          docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" ./
-          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}"
-
-      # docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}:${{ github.sha }}" ./
-      # docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}:${{ github.sha }}"
+          docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ env.GH_REPO_NAME }}/${{ env.GH_BRANCH_NAME }}-${{ github.sha }}" ./
+          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ env.GH_REPO_NAME }}/${{ env.GH_BRANCH_NAME }}-${{ github.sha }}"
 
       # END - Docker auth and build
 

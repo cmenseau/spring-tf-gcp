@@ -22,7 +22,7 @@ resource "google_service_account" "service_account" {
 }
 
 resource "google_iam_workload_identity_pool" "github" {
-  workload_identity_pool_id = "github-tf"
+  workload_identity_pool_id = "github-wip"
   disabled = false
   display_name = "GitHub Actions Pool"
 }

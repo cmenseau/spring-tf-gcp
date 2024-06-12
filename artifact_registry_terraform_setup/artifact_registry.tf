@@ -8,6 +8,10 @@ provider "google" {
     region      = "us-east1"
 }
 
+provider "random" {
+  # Configuration options
+}
+
 data "google_project" "project" {}
 
 resource "google_artifact_registry_repository" "artifact_registry" {
@@ -21,8 +25,14 @@ resource "google_service_account" "service_account" {
   display_name = "Service Account for Github"
 }
 
+# Using a random ID for workload_identity_pool, because once a provider is deleted, its name cannot be reused for 30 days
+
+resource "random_id" "wip" {
+  byte_length = 8
+}
+
 resource "google_iam_workload_identity_pool" "github" {
-  workload_identity_pool_id = "github-tf"
+  workload_identity_pool_id = "github-${random_id.wip.hex}"
   display_name = "GitHub Actions Pool"
 }
 

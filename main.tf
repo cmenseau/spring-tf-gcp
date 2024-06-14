@@ -110,7 +110,7 @@ resource "google_compute_instance_iam_binding" "binding-get-instance" {
   project = google_compute_instance.default.project
   zone = google_compute_instance.default.zone
   instance_name = google_compute_instance.default.name
-  role = "roles/compute.osLogin" 
+  role = "roles/compute.instanceAdmin.v1" 
   members = [
     "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
     google_service_account.service_account.member,

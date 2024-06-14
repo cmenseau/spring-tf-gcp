@@ -110,7 +110,8 @@ resource "google_compute_instance_iam_binding" "binding-get-instance" {
   project = google_compute_instance.default.project
   zone = google_compute_instance.default.zone
   instance_name = google_compute_instance.default.name
-  role = "roles/compute.instanceAdmin.v1" 
+  role = "roles/compute.osLogin" 
+ # role = "roles/compute.instanceAdmin.v1" 
   members = [
     "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
     google_service_account.service_account.member,
@@ -125,6 +126,16 @@ resource "google_iap_tunnel_instance_iam_binding" "binding-iap-access" {
   members = [
     "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
     google_service_account.service_account.member,
+  ]
+}
+
+# my-github-service-account can work on VM using google_service_account.service_account ?
+resource "google_service_account_iam_binding" "admin-account-iam" {
+  service_account_id = google_service_account.service_account.name
+  role               = "roles/iam.serviceAccountUser"
+
+  members = [
+    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
   ]
 }
 

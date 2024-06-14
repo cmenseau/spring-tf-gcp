@@ -100,6 +100,22 @@ jobs:
           docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ env.GH_BRANCH_NAME }}-${{ github.sha }}" ./
           docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ env.GH_BRANCH_NAME }}-${{ github.sha }}"
 
+
+      - name: Connect to CE with SSH
+        id: 'compute-ssh'
+        uses: 'google-github-actions/ssh-compute@v1'
+        with:
+          instance_name: 'my-instance'
+          zone: 'us-east1-d'
+          ssh_private_key: '${{ secrets.GCP_SSH_PRIVATE_KEY }}'
+          command: 'echo Hello world'
+    
+        # Example of using the output
+      - name: Testing SSH connection
+        id: 'test_ssh'
+        run: |-
+          echo '${{ steps.compute-ssh.outputs.stdout }}'
+          echo '${{ steps.compute-ssh.outputs.stderr }}'
       # END - Docker auth and build
 
       # - name: Deploy to Cloud Run

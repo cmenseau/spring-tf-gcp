@@ -67,6 +67,19 @@ EOT
         scopes = ["cloud-platform"]
     }
     allow_stopping_for_update = true
+    metadata = {
+      ssh-keys = "${var.gce_ssh_user}:${var.gce_ssh_pub_key}"
+    }
+}
+
+variable gce_ssh_user {
+  type = string
+  default = "cycy_menseau"
+}
+
+variable gce_ssh_pub_key {
+  type = string
+  default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCj31vynGaZ1BzmyWQVgSpdbM+gS44omU9RIqmtSFeDNLESfLCgheUUrgqkTat6gvJTlR5rHokkf6j4y8dWkmOayxtR9CRfW5OaDIgD+9aYVBxg1sI7GcMFlHZrLqHK+mKYg9GisJIMcE5cQZe9RjUB6JZhNBo5vOdtX1DTTgytsAXpyMTxyoHwtQ4lWZ2W7XY7u3upUXi5dZ3HrR+TZG5lSS1eA5WElXR100XBRL9UXpptUFnVoTjySPzSKMR/vR1P8ZVGtlokJGJZG/40CjTU7NfMG2dF+VN1pXFiVhlngxd2/Bo4b/NgMz06x1M0kiH8HLGqsi+05YoF6KHVQ0lf cycy_menseau"
 }
 
 resource "google_service_account" "service_account" {

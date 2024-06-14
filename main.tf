@@ -135,6 +135,21 @@ resource "google_compute_router_nat" "nat-config" {
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }
 
+# allow IAP to access VM without public address
+
+resource "google_compute_firewall" "default" {
+  name    = "my-firewall"
+  network = "default"
+
+  direction = "INGRESS"
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = ["35.235.240.0/20"]
+}
+
 resource "google_compute_instance" "postgres-instance" {
     name         = "my-postgres-instance"
     machine_type = "e2-micro"

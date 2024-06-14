@@ -112,7 +112,8 @@ resource "google_compute_instance_iam_binding" "binding-get-instance" {
   instance_name = google_compute_instance.default.name
   role = "roles/compute.osLogin" 
   members = [
-    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com"
+    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
+    google_service_account.service_account.member,
   ]
 }
 
@@ -122,7 +123,8 @@ resource "google_iap_tunnel_instance_iam_binding" "binding-iap-access" {
   instance = google_compute_instance.default.name
   role = "roles/iap.tunnelResourceAccessor"
   members = [
-    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com"
+    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
+    google_service_account.service_account.member,
   ]
 }
 

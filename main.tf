@@ -1,5 +1,10 @@
+variable gcp_project_name {
+  type = string
+  default = "java-with-db-terraform"
+}
+
 provider "google" {
-    project     = "java-with-db-terraform"
+    project     = var.gcp_project_name
     region      = "us-east1"
 }
 
@@ -9,6 +14,7 @@ resource "google_compute_instance" "default" {
     zone = "us-east1-d"
     boot_disk {
         initialize_params {
+            type = "pd-standard"
             image = "ubuntu-2204-jammy-v20240519"
         }
     }
@@ -36,18 +42,21 @@ sudo apt-get install docker-ce containerd.io docker-buildx-plugin docker-compose
 sudo groupadd docker
 sudo usermod -aG docker cycy_menseau
 
-# output of gcloud auth configure-docker us-east1-docker.pkg.dev
-mkdir /home/cycy_menseau/.docker
-touch /home/cycy_menseau/.docker/config.json
-echo '{
-  "credHelpers": {
-    "us-east1-docker.pkg.dev": "gcloud"
-  }
-}' > /home/cycy_menseau/.docker/config.json
+gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
 
-gcloud config set auth/impersonate_service_account my-compute-engine-account@java-with-db-terraform.iam.gserviceaccount.com
+gcloud config set auth/impersonate_service_account ${google_service_account.service_account.email}
 
 newgrp docker
+
+sudo docker pull \
+  us-east1-docker.pkg.dev/${var.gcp_project_name}/todo-app-image-repo/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91
+
+sudo docker run -p 8080:8080 \
+  -e MYAPP_JDBC_USER=myuser \
+  -e MYAPP_JDBC_PASS=mysecretpassword \
+  -e MYAPP_JDBC_URL=jdbc:postgresql://${google_compute_instance.postgres-instance.network_interface.0.network_ip}:5432/todo_db \
+  -d \
+  us-east1-docker.pkg.dev/${var.gcp_project_name}/todo-app-image-repo/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91
 
 EOT
 
@@ -98,4 +107,69 @@ resource "google_compute_router_nat" "nat-config" {
   router                             = "${google_compute_router.nat-router.name}"
   nat_ip_allocate_option             = "AUTO_ONLY"
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+}
+
+resource "google_compute_instance" "postgres-instance" {
+    name         = "my-postgres-instance"
+    machine_type = "e2-micro"
+    zone = "us-east1-d"
+    boot_disk {
+        initialize_params {
+            type = "pd-standard"
+            image = "ubuntu-2204-jammy-v20240519"
+        }
+    }
+    network_interface {
+        network = "default"
+    }
+    metadata_startup_script = <<EOT
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+
+sudo apt-get install docker-ce containerd.io docker-buildx-plugin docker-compose-plugin -y
+
+sudo groupadd docker
+sudo usermod -aG docker cycy_menseau
+
+newgrp docker
+docker pull postgres
+
+touch init.sql
+
+echo "CREATE TABLE todo (
+  id SERIAL NOT NULL PRIMARY KEY,
+  content VARCHAR(255)
+);
+INSERT INTO todo (content)
+VALUES
+    ('Inserted from TF'),
+    ('Also inserted from TF');" > init.sql
+
+docker run --name my-postgres -p 5432:5432 -e POSTGRES_USER=myuser -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_DB=todo_db \
+    -v ./init.sql:/docker-entrypoint-initdb.d/init.sql -d postgres
+
+EOT
+    # psql -h localhost -p 5432 -U myuser -d todo_db
+
+
+    # to check logs : sudo journalctl -u google-startup-scripts.service
+
+    allow_stopping_for_update = true
+}
+
+# IP of instance containing postgresql
+
+output postgres-ce-ip {
+  value = google_compute_instance.postgres-instance.network_interface.0.network_ip
 }

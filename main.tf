@@ -106,13 +106,23 @@ resource "google_artifact_registry_repository_iam_binding" "iam_binding_service_
 # allow service account to connect with SSH on Compute Engine instance
 # Required 'compute.instances.get' permission for 'projects/java-with-db-terraform/zones/us-east1-d/instances/my-instance'
 
-resource "google_compute_instance_iam_binding" "binding" {
+resource "google_compute_instance_iam_binding" "binding-get-instance" {
   project = google_compute_instance.default.project
   zone = google_compute_instance.default.zone
   instance_name = google_compute_instance.default.name
   role = "roles/compute.osLogin" 
   members = [
-    google_service_account.service_account.member,
+    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com"
+  ]
+}
+
+resource "google_iap_tunnel_instance_iam_binding" "binding-iap-access" {
+  project = google_compute_instance.default.project
+  zone = google_compute_instance.default.zone
+  instance = google_compute_instance.default.name
+  role = "roles/iap.tunnelResourceAccessor"
+  members = [
+    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com"
   ]
 }
 

@@ -113,8 +113,7 @@ resource "google_compute_instance_iam_binding" "binding-get-instance" {
   role = "roles/compute.osLogin" 
  # role = "roles/compute.instanceAdmin.v1" 
   members = [
-    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
-    google_service_account.service_account.member,
+    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp	",
   ]
 }
 
@@ -124,18 +123,16 @@ resource "google_iap_tunnel_instance_iam_binding" "binding-iap-access" {
   instance = google_compute_instance.default.name
   role = "roles/iap.tunnelResourceAccessor"
   members = [
-    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
-    google_service_account.service_account.member,
+    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp	",
   ]
 }
 
-# my-github-service-account can work on VM using google_service_account.service_account ?
 resource "google_service_account_iam_binding" "admin-account-iam" {
   service_account_id = google_service_account.service_account.name
   role               = "roles/iam.serviceAccountUser"
 
   members = [
-    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
+    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp	",
   ]
 }
 

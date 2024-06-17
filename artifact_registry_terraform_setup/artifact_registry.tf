@@ -52,6 +52,8 @@ resource "google_service_account_iam_binding" "admin-account-iam" {
   ]
 }
 
+# give service account access to push to Artifact Registry
+
 resource "google_artifact_registry_repository_iam_binding" "iam_binding_service_account_role" {
   project = google_artifact_registry_repository.artifact_registry.project
   location = google_artifact_registry_repository.artifact_registry.location

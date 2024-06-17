@@ -68,7 +68,8 @@ EOT
     }
     allow_stopping_for_update = true
     metadata = {
-      ssh-keys = "${var.gce_ssh_user}:${var.gce_ssh_pub_key}"
+      ssh-keys = "${var.gce_ssh_user}:${var.gce_ssh_pub_key}",
+      enable-oslogin = "TRUE",
     }
 }
 
@@ -113,7 +114,8 @@ resource "google_compute_instance_iam_binding" "binding-get-instance" {
   role = "roles/compute.osLogin" 
  # role = "roles/compute.instanceAdmin.v1" 
   members = [
-    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp	",
+    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
+    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp",
   ]
 }
 
@@ -123,7 +125,8 @@ resource "google_iap_tunnel_instance_iam_binding" "binding-iap-access" {
   instance = google_compute_instance.default.name
   role = "roles/iap.tunnelResourceAccessor"
   members = [
-    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp	",
+    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
+    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp",
   ]
 }
 
@@ -132,7 +135,8 @@ resource "google_service_account_iam_binding" "admin-account-iam" {
   role               = "roles/iam.serviceAccountUser"
 
   members = [
-    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp	",
+    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
+    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp",
   ]
 }
 

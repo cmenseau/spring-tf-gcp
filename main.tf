@@ -114,8 +114,7 @@ resource "google_compute_instance_iam_binding" "binding-get-instance" {
   role = "roles/compute.osLogin" 
  # role = "roles/compute.instanceAdmin.v1" 
   members = [
-    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
-    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp",
+    google_service_account.service_account.member,
   ]
 }
 

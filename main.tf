@@ -112,11 +112,8 @@ resource "google_compute_instance_iam_binding" "binding-get-instance" {
   zone = google_compute_instance.default.zone
   instance_name = google_compute_instance.default.name
   role = "roles/compute.osLogin" 
- # role = "roles/compute.instanceAdmin.v1" 
   members = [
-    google_service_account.service_account.member,
     "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
-    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp",
   ]
 }
 
@@ -126,9 +123,7 @@ resource "google_compute_instance_iam_binding" "binding-get-instance-2" {
   instance_name = google_compute_instance.default.name
   role = "roles/compute.instanceAdmin.v1" 
   members = [
-    google_service_account.service_account.member,
     "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
-    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp",
   ]
 }
 
@@ -138,9 +133,7 @@ resource "google_iap_tunnel_instance_iam_binding" "binding-iap-access" {
   instance = google_compute_instance.default.name
   role = "roles/iap.tunnelResourceAccessor"
   members = [
-    google_service_account.service_account.member,
     "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
-    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp",
   ]
 }
 
@@ -149,10 +142,16 @@ resource "google_service_account_iam_binding" "admin-account-iam" {
   role               = "roles/iam.serviceAccountUser"
 
   members = [
-    google_service_account.service_account.member,
     "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
-    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp",
   ]
+}
+
+resource "google_service_account_iam_binding" "iam_binding-2" {
+    service_account_id = google_service_account.service_account.name
+    role               = "roles/iam.serviceAccountTokenCreator"
+    members = [
+        "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
+    ]
 }
 
 output compute_instance-id {

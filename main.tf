@@ -124,8 +124,7 @@ resource "google_iap_tunnel_instance_iam_binding" "binding-iap-access" {
   instance = google_compute_instance.default.name
   role = "roles/iap.tunnelResourceAccessor"
   members = [
-    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
-    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp",
+    google_service_account.service_account.member,
   ]
 }
 

@@ -118,6 +118,16 @@ resource "google_compute_instance_iam_binding" "binding-get-instance" {
   ]
 }
 
+resource "google_compute_instance_iam_binding" "binding-get-instance-2" {
+  project = google_compute_instance.default.project
+  zone = google_compute_instance.default.zone
+  instance_name = google_compute_instance.default.name
+  role = "roles/compute.instanceAdmin.v1" 
+  members = [
+    google_service_account.service_account.member,
+  ]
+}
+
 resource "google_iap_tunnel_instance_iam_binding" "binding-iap-access" {
   project = google_compute_instance.default.project
   zone = google_compute_instance.default.zone

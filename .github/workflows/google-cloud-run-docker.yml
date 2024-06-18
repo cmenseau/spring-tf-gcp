@@ -111,7 +111,7 @@ jobs:
           ssh_private_key: '${{ secrets.GCP_SSH_PRIVATE_KEY }}'
           command: |-
             sudo docker pull ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{env.PROJECT_ID}}/${{env.REPOSITORY}}/${{env.SERVICE}}:${{ env.GH_BRANCH_NAME }}-${{ github.sha }}
-            sudo docker stop $(docker ps -a -q)
+            sudo docker stop $(sudo docker ps -a -q)
             sudo docker run -p 8080:8080 \
               --env-file /env.list \
               -d \

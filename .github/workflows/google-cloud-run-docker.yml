@@ -79,7 +79,7 @@ jobs:
         id: auth
         uses: 'google-github-actions/auth@v2'
         with:
-          project_id: 'java-with-db-terraform'
+          project_id: ${{ env.PROJECT_ID }}
           token_format: 'access_token'
           service_account: 'my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com'
           workload_identity_provider: 'projects/198800315981/locations/global/workloadIdentityPools/github-wip/providers/my-repo' 
@@ -106,6 +106,7 @@ jobs:
         uses: 'google-github-actions/ssh-compute@v1'
         with:
           instance_name: 'my-instance'
+          project_id: ${{ env.PROJECT_ID }}
           zone: 'us-east1-d'
           ssh_private_key: '${{ secrets.GCP_SSH_PRIVATE_KEY }}'
           command: 'echo Hello world'

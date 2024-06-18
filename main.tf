@@ -115,6 +115,8 @@ resource "google_compute_instance_iam_binding" "binding-get-instance" {
  # role = "roles/compute.instanceAdmin.v1" 
   members = [
     google_service_account.service_account.member,
+    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
+    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp",
   ]
 }
 
@@ -125,6 +127,8 @@ resource "google_compute_instance_iam_binding" "binding-get-instance-2" {
   role = "roles/compute.instanceAdmin.v1" 
   members = [
     google_service_account.service_account.member,
+    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
+    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp",
   ]
 }
 
@@ -135,6 +139,8 @@ resource "google_iap_tunnel_instance_iam_binding" "binding-iap-access" {
   role = "roles/iap.tunnelResourceAccessor"
   members = [
     google_service_account.service_account.member,
+    "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
+    "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp",
   ]
 }
 
@@ -143,6 +149,7 @@ resource "google_service_account_iam_binding" "admin-account-iam" {
   role               = "roles/iam.serviceAccountUser"
 
   members = [
+    google_service_account.service_account.member,
     "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
     "principalSet://iam.googleapis.com/projects/198800315981/locations/global/workloadIdentityPools/github-wip/attribute.repository/cmenseau/spring-tf-gcp",
   ]

@@ -51,10 +51,13 @@ newgrp docker
 sudo docker pull \
   us-east1-docker.pkg.dev/${var.gcp_project_name}/todo-app-image-repo/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91
 
+touch env.list
+echo "MYAPP_JDBC_USER=myuser
+MYAPP_JDBC_PASS=mysecretpassword
+MYAPP_JDBC_URL=jdbc:postgresql://${google_compute_instance.postgres-instance.network_interface.0.network_ip}:5432/todo_db" > env.list
+
 sudo docker run -p 8080:8080 \
-  -e MYAPP_JDBC_USER=myuser \
-  -e MYAPP_JDBC_PASS=mysecretpassword \
-  -e MYAPP_JDBC_URL=jdbc:postgresql://${google_compute_instance.postgres-instance.network_interface.0.network_ip}:5432/todo_db \
+  --env-file env.list \
   -d \
   us-east1-docker.pkg.dev/${var.gcp_project_name}/todo-app-image-repo/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91
 
@@ -127,19 +130,6 @@ resource "google_service_account_iam_binding" "admin-account-iam" {
     "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
   ]
 }
-
-# data "google_service_account" "my-github-service-account" {
-#   account_id = "my-github-service-account"
-# }
-
-# # testing manually 
-# resource "google_service_account_iam_binding" "iam_binding-2" {
-#     service_account_id = data.google_service_account.my-github-service-account.name
-#     role               = "roles/iam.serviceAccountTokenCreator"
-#     members = [
-#         "user:cycy.menseau@gmail.com",
-#     ]
-# }
 
 output compute_instance-id {
   value       = google_compute_instance.default.instance_id

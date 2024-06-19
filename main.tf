@@ -89,13 +89,13 @@ resource "google_service_account" "service_account" {
     display_name = "Service Account for Compute Engine to access Artifact Registry"
 }
 
-# resource "google_service_account_iam_binding" "iam_binding" {
-#     service_account_id = google_service_account.service_account.name
-#     role               = "roles/iam.serviceAccountTokenCreator"
-#     members = [
-#         google_service_account.service_account.member,
-#     ]
-# }
+resource "google_service_account_iam_binding" "iam_binding" {
+    service_account_id = google_service_account.service_account.name
+    role               = "roles/iam.serviceAccountTokenCreator"
+    members = [
+        google_service_account.service_account.member,
+    ]
+}
 
 resource "google_artifact_registry_repository_iam_binding" "iam_binding_service_account_role" {
   repository = "todo-app-image-repo"

@@ -62,7 +62,6 @@ sudo docker run -p 8080:8080 \
   us-east1-docker.pkg.dev/${var.gcp_project_name}/todo-app-image-repo/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91
 
 EOT
-
     # to check logs : sudo journalctl -u google-startup-scripts.service
 
     service_account {
@@ -72,7 +71,6 @@ EOT
     allow_stopping_for_update = true
     metadata = {
       ssh-keys = "${var.gce_ssh_user}:${var.gce_ssh_pub_key}",
-      #enable-oslogin = "TRUE",
     }
 }
 
@@ -91,13 +89,13 @@ resource "google_service_account" "service_account" {
     display_name = "Service Account for Compute Engine to access Artifact Registry"
 }
 
-resource "google_service_account_iam_binding" "iam_binding" {
-    service_account_id = google_service_account.service_account.name
-    role               = "roles/iam.serviceAccountTokenCreator"
-    members = [
-        google_service_account.service_account.member,
-    ]
-}
+# resource "google_service_account_iam_binding" "iam_binding" {
+#     service_account_id = google_service_account.service_account.name
+#     role               = "roles/iam.serviceAccountTokenCreator"
+#     members = [
+#         google_service_account.service_account.member,
+#     ]
+# }
 
 resource "google_artifact_registry_repository_iam_binding" "iam_binding_service_account_role" {
   repository = "todo-app-image-repo"

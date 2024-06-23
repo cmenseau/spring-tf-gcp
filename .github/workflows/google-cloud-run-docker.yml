@@ -57,7 +57,6 @@ env:
 
 jobs:
   deploy:
-    # Add 'id-token' with the intended permissions for workload identity federation
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -115,13 +114,11 @@ jobs:
             
           # env.list file is created at instance set up by terraform
     
-        # Example of using the output
-      - name: Testing SSH connection
+      - name: Echo SSH outputs
         id: 'test_ssh'
         run: |-
           echo '${{ steps.compute-ssh.outputs.stdout }}'
           echo '${{ steps.compute-ssh.outputs.stderr }}'
-      # END - Docker auth and build
 
       # - name: Deploy to Cloud Run
       #   id: deploy

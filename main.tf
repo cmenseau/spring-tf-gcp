@@ -44,7 +44,7 @@ sudo usermod -aG docker cycy_menseau
 
 gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
 
-gcloud config set auth/impersonate_service_account ${google_service_account.service_account.email}
+gcloud config set auth/impersonate_service_account ${google_service_account.registry_reader.email}
 
 newgrp docker
 
@@ -86,11 +86,16 @@ variable gce_ssh_pub_key {
 
 resource "google_service_account" "service_account" {
     account_id   = "my-compute-engine-account"
-    display_name = "Service Account for Compute Engine to access Artifact Registry"
+    display_name = "Service Account attached to Compute Engine"
+}
+
+resource "google_service_account" "registry_reader" {
+    account_id   = "artifact-registry-reader"
+    display_name = "Service Account used to access Artifact Registry"
 }
 
 resource "google_service_account_iam_binding" "iam_binding" {
-    service_account_id = google_service_account.service_account.name
+    service_account_id = google_service_account.registry_reader.name
     role               = "roles/iam.serviceAccountTokenCreator"
     members = [
         google_service_account.service_account.member,
@@ -101,7 +106,7 @@ resource "google_artifact_registry_repository_iam_binding" "iam_binding_service_
   repository = "todo-app-image-repo"
   role = "roles/artifactregistry.reader"
   members = [
-    google_service_account.service_account.member,
+    google_service_account.registry_reader.member,
   ]
 }
 

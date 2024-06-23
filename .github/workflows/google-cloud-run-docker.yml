@@ -50,12 +50,10 @@ on:
 
 env:
   PROJECT_ID: "java-with-db-terraform"
-  GAR_LOCATION: "us-east1" # TODO: update Artifact Registry location
+  GAR_LOCATION: "us-east1"
   REPOSITORY: todo-app-image-repo 
   SERVICE: todo-app-java
   GH_BRANCH_NAME: ${{ github.ref_name }} 
-
-  # REGION: "us-east1" # TODO: update Cloud Run service region
 
 jobs:
   deploy:
@@ -66,10 +64,10 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Run tests
+      - name: Run integration tests, with postgresql db
         id: test
         run: |-
           docker run --name local-postgres -p 5432:5432 -e POSTGRES_USER=cycy -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_DB=todo_db -v ./docker-entrypoint-initdb.d/init.sql:/docker-entrypoint-initdb.d/init.sql -d postgres
@@ -83,8 +81,6 @@ jobs:
           token_format: 'access_token'
           service_account: 'my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com'
           workload_identity_provider: 'projects/198800315981/locations/global/workloadIdentityPools/github-wip/providers/my-repo' 
-
-      # BEGIN - Docker auth and build (NOTE: If you already have a container image, these Docker steps can be omitted)
 
       # Authenticate Docker to Google Cloud Artifact Registry
       - name: Docker Auth
@@ -101,7 +97,7 @@ jobs:
           docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ env.GH_BRANCH_NAME }}-${{ github.sha }}"
 
 
-      - name: Connect to CE with SSH
+      - name: Connect to CE with SSH, deploy new image to Compute Instance
         id: 'compute-ssh'
         uses: 'google-github-actions/ssh-compute@v1'
         with:

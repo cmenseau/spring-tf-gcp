@@ -65,7 +65,7 @@ EOT
     # to check logs : sudo journalctl -u google-startup-scripts.service
 
     service_account {
-        email = google_service_account.service_account.email
+        email = google_service_account.app_instance_account.email
         scopes = ["cloud-platform"]
     }
     allow_stopping_for_update = true
@@ -84,7 +84,7 @@ variable gce_ssh_pub_key {
   default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCj31vynGaZ1BzmyWQVgSpdbM+gS44omU9RIqmtSFeDNLESfLCgheUUrgqkTat6gvJTlR5rHokkf6j4y8dWkmOayxtR9CRfW5OaDIgD+9aYVBxg1sI7GcMFlHZrLqHK+mKYg9GisJIMcE5cQZe9RjUB6JZhNBo5vOdtX1DTTgytsAXpyMTxyoHwtQ4lWZ2W7XY7u3upUXi5dZ3HrR+TZG5lSS1eA5WElXR100XBRL9UXpptUFnVoTjySPzSKMR/vR1P8ZVGtlokJGJZG/40CjTU7NfMG2dF+VN1pXFiVhlngxd2/Bo4b/NgMz06x1M0kiH8HLGqsi+05YoF6KHVQ0lf cycy_menseau"
 }
 
-resource "google_service_account" "service_account" {
+resource "google_service_account" "app_instance_account" {
     account_id   = "my-compute-engine-account"
     display_name = "Service Account attached to Compute Engine"
 }
@@ -98,7 +98,7 @@ resource "google_service_account_iam_binding" "iam_binding" {
     service_account_id = google_service_account.registry_reader.name
     role               = "roles/iam.serviceAccountTokenCreator"
     members = [
-        google_service_account.service_account.member,
+        google_service_account.app_instance_account.member,
     ]
 }
 
@@ -127,7 +127,7 @@ resource "google_project_iam_binding" "binding-iap-access" {
 }
 
 resource "google_service_account_iam_binding" "admin-account-iam" {
-  service_account_id = google_service_account.service_account.name
+  service_account_id = google_service_account.app_instance_account.name
   role               = "roles/iam.serviceAccountUser"
   members = [
     "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",

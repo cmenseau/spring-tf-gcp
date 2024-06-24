@@ -28,6 +28,7 @@ SELECT * FROM todo;
 - [ ] Find another way to pass DB credentials when deploying the new container
 - [ ] See whether startup scripts of Compute instances can be moved away from metadata_startup_script
 - [ ] Related : on terraform apply : find a way to create the instance with the latest version (currently a hardcoded tag is used) -> is it really necessary since 
+- [ ] Check if possible to merge the 2 Dockerfiles
 
 # CI/CD pipeline with Github Actions
 

@@ -7,6 +7,7 @@ COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 COPY src src
+COPY .git .git
 
 RUN ./mvnw install -DskipTests -e
 

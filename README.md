@@ -14,14 +14,17 @@ SELECT * FROM todo;
 
 - [x] Set up Artifact Registry and workload identity pool (manually in GCP console), create a Github pipeline to push container image to Artifact Registry
 - [x] Create Terraform script for Artifact Registry / Workload identity pool
-- [x] Set up a postresql DB in GCP Compute Engine using Terraform
-- [x] Set up a Compute Engine instance for the app using Terraform
+- [x] Create Terraform script to set up a postresql DB in GCP Compute Engine
+- [x] Create Terraform script to set up a Compute Engine instance for the app
 - [x] Deploy the app manually on CE instance, by pulling it from Artifact Registry (basic level)
-- [ ] Use 2 different service accounts for Compute Engine instance and to get read access to Artifact Registry. The current use of a single service account is unclear
-- [ ] Update Github Actions so that a push to main automatically deploys the app on GCP Compute Engine https://github.com/google-github-actions/ssh-compute
+- [x] Update Github Actions so that a push to main automatically deploys the app on GCP Compute Engine https://github.com/google-github-actions/ssh-compute
+- [x] Add a graph for CI/CD steps
+- [x] Use 2 different service accounts for Compute Engine instance and to get read access to Artifact Registry. The current use of a single service account is unclear
 - [ ] Best practices and hiding of passwords / identifiers
 - [ ] Create a cloud endpoint to make the API online : https://cloud.google.com/endpoints/docs/openapi/get-started-compute-engine-docker
-- [ ] Add a graph
+- [ ] Display build ID in the Java App
+- [ ] Find a way to run the terraform command in Github Actions
+- [ ] See whether startup scripts of Compute instances can be moved away from metadata_startup_script
 
 # CI/CD pipeline with Github Actions
 
@@ -161,13 +164,18 @@ This is a Compute Instance created from an Ubuntu image with *google_compute_ins
 
 ## Pulling the app from Artifact Regitry and starting it
 
-A Service Account is attached to the Compute Engine instance, it has permissions to impersonate a service account with read access to Artifact Registry. Here's how to set up this account with IAM permissions :
+A Service Account is attached to the Compute Engine instance, it has permissions to impersonate a service account with read access to Artifact Registry. Here's how to set up these 2 accounts with IAM permissions :
 
-Create service account : 
+Create 2 service accounts : 
 ```
-resource "google_service_account" "service_account" {
-  account_id   = "my-compute-engine-account"
-  display_name = "Service Account for Compute Engine to access Artifact Registry"
+resource "google_service_account" "app_instance_account" {
+    account_id   = "my-compute-engine-account"
+    display_name = "Service Account attached to Compute Engine"
+}
+
+resource "google_service_account" "registry_reader" {
+    account_id   = "artifact-registry-reader"
+    display_name = "Service Account used to access Artifact Registry"
 }
 ```
 
@@ -177,32 +185,34 @@ resource "google_artifact_registry_repository_iam_binding" "iam_binding_service_
   repository = "todo-app-image-repo"
   role = "roles/artifactregistry.reader"
   members = [
-    google_service_account.service_account.member,
+    google_service_account.registry_reader.member,
   ]
 }
 ```
 
-// TODO : use another service account here
-
-Attach a service account to Compute Engine instance :
+Attach the right service account to Compute Engine instance :
 ```
 service_account {
-  email = google_service_account.service_account.email
+  email = google_service_account.app_instance_account.email
   scopes = ["cloud-platform"]
 }
 ```
 
-// TODO : replace by the service account attached to CE in members
-
-Give this account the permission to impersonate itself through serviceAccountTokenCreator role.
+Give *app_instance_account* the permission to impersonate *registry_reader* through serviceAccountTokenCreator role :
 ```
 resource "google_service_account_iam_binding" "iam_binding" {
-    service_account_id = google_service_account.service_account.name
+    service_account_id = google_service_account.registry_reader.name
     role               = "roles/iam.serviceAccountTokenCreator"
     members = [
-        google_service_account.service_account.member,
+        google_service_account.app_instance_account.member,
     ]
 }
+```
+
+With this setup, we can now impersonate the service account with read access to Artifact Registry, in the Compute Instance.
+
+```
+gcloud config set auth/impersonate_service_account ${google_service_account.registry_reader.email}
 ```
 
 
@@ -255,9 +265,6 @@ resource "google_service_account_iam_binding" "admin-account-iam" {
   ]
 }
 ```
-
-
-
 
 <details>
 <summary>Additional commands to debug SSH connexion, from a local machine</summary>

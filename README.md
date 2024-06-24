@@ -10,7 +10,7 @@ docker start postgres
 psql -h localhost -p 5432 -U myuser -d todo_db
 SELECT * FROM todo;
 
-# TODO List
+# TODO List & Ideas
 
 - [x] Set up Artifact Registry and workload identity pool (manually in GCP console), create a Github pipeline to push container image to Artifact Registry
 - [x] Create Terraform script for Artifact Registry / Workload identity pool
@@ -24,7 +24,10 @@ SELECT * FROM todo;
 - [ ] Create a cloud endpoint to make the API online : https://cloud.google.com/endpoints/docs/openapi/get-started-compute-engine-docker
 - [ ] Display build ID in the Java App
 - [ ] Find a way to run the terraform command in Github Actions
+- [ ] Use Cloud Run
+- [ ] Find another way to pass DB credentials when deploying the new container
 - [ ] See whether startup scripts of Compute instances can be moved away from metadata_startup_script
+- [ ] Related : on terraform apply : find a way to create the instance with the latest version (currently a hardcoded tag is used) -> is it really necessary since 
 
 # CI/CD pipeline with Github Actions
 

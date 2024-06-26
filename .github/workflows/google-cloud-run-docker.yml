@@ -83,7 +83,7 @@ jobs:
             --progress=plain \
             --no-cache \
             --add-host host.docker.internal:host-gateway \
-            -f cicd/Dockerfile \
+            -f docker/cicd/Dockerfile \
             -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ env.GH_BRANCH_NAME }}-${{ github.sha }}" \
             .
 

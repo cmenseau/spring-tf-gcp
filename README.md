@@ -1,14 +1,10 @@
-docker compose up --build
-http://localhost:8080/todos-db
+Personal project to learn about :
+- Google Cloud Platform
+- Github Actions (CI/CD)
+- Terraform
+- Docker
 
-./mvnw verify
-
-docker run --name local-postgres -p 5432:5432 -e POSTGRES_USER=cycy -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_DB=todo_db -v ./docker-entrypoint-initdb.d/init.sql:/docker-entrypoint-initdb.d/init.sql -d postgres
-docker logs local-postgres
-docker start postgres
-
-psql -h localhost -p 5432 -U myuser -d todo_db
-SELECT * FROM todo;
+My goal here is to use these technologies related to DevOps / infra topics, rather than working on pure software development, to broaden my skills.
 
 # TODO List & Ideas
 
@@ -20,15 +16,15 @@ SELECT * FROM todo;
 - [x] Update Github Actions so that a push to main automatically deploys the app on GCP Compute Engine https://github.com/google-github-actions/ssh-compute
 - [x] Add a graph for CI/CD steps
 - [x] Use 2 different service accounts for Compute Engine instance and to get read access to Artifact Registry. The current use of a single service account is unclear
+- [x] Display build ID in the Java App
+- [x] Reorganize the 2 Dockerfiles 
 - [ ] Best practices and hiding of passwords / identifiers
 - [ ] Create a cloud endpoint to make the API online : https://cloud.google.com/endpoints/docs/openapi/get-started-compute-engine-docker
-- [ ] Display build ID in the Java App
 - [ ] Find a way to run the terraform command in Github Actions
 - [ ] Use Cloud Run
-- [ ] Find another way to pass DB credentials when deploying the new container
+- [ ] Find another way to pass DB credentials when deploying the new container (currently using env.list file)
 - [ ] See whether startup scripts of Compute instances can be moved away from metadata_startup_script
-- [ ] Related : on terraform apply : find a way to create the instance with the latest version (currently a hardcoded tag is used) -> is it really necessary since 
-- [ ] Check if possible to merge the 2 Dockerfiles
+- [ ] Related : on terraform apply : find a way to create the instance with the latest version (currently a hardcoded tag is used) ??
 
 # CI/CD pipeline with Github Actions
 
@@ -289,13 +285,24 @@ gcloud projects get-iam-policy java-with-db-terraform  \
 ```
 </details>
 
-
-
 Reference :
 
 https://antonputra.com/google/gcp-how-to-ssh-into-your-vm/#grant-iam-permissions-to-ssh
 
 https://github.com/google-github-actions/ssh-compute
 
+# Running in a local environment
 
+Run this command to compose the full app setup : postgres DB + java app.
+```
+docker compose up --build
+```
+App is available on http://localhost:8080
 
+To access the DB, logs etc :
+```
+psql -h localhost -p 5432 -U myuser -d todo_db
+SELECT * FROM todo;
+
+docker logs postgres
+```

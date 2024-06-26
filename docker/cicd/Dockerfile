@@ -1,3 +1,5 @@
+# stage 1 : test and build jar
+
 FROM eclipse-temurin:17-jdk-alpine as build
 WORKDIR /workspace/app
 
@@ -11,4 +13,12 @@ COPY pom.xml .
 COPY src src
 COPY .git .git
 
-RUN ./mvnw verify
+# build, run unit and integration tests
+RUN ./mvnw install
+
+# stage 2 : image with the jar
+
+FROM eclipse-temurin:17-jdk-alpine AS image
+VOLUME /tmp
+COPY --from=build /workspace/app/target/*.jar app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]

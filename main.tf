@@ -144,12 +144,6 @@ resource "google_service_account_iam_binding" "admin-account-iam" {
   ]
 }
 
-output compute_instance-id {
-  value       = google_compute_instance.default.instance_id
-  description = "description"
-  depends_on  = []
-}
-
 # allow traffic to internet in Compute Instance to fetch docker install
 resource "google_compute_router" "nat-router" {
   name    = "nat-router"
@@ -241,6 +235,20 @@ EOT
 
 output postgres-ce-ip {
   value = google_compute_instance.postgres-instance.network_interface.0.network_ip
+}
+
+output my-instance-ip {
+  value = google_compute_instance.default.network_interface.0.network_ip
+}
+
+output my-instance-name {
+  value = google_compute_instance.default.name
+}
+
+output compute_instance-id {
+  value       = google_compute_instance.default.instance_id
+  description = "description"
+  depends_on  = []
 }
 
 resource "local_file" "tf_ansible_vars_file_new" {

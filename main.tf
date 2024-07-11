@@ -21,47 +21,47 @@ resource "google_compute_instance" "default" {
     network_interface {
         network = "default"
     }
-    metadata_startup_script = <<EOT
-# Add Docker's official GPG key:
-sudo apt-get update
-sudo apt-get install ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
+#     metadata_startup_script = <<EOT
+# # Add Docker's official GPG key:
+# sudo apt-get update
+# sudo apt-get install ca-certificates curl
+# sudo install -m 0755 -d /etc/apt/keyrings
+# sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+# sudo chmod a+r /etc/apt/keyrings/docker.asc
 
 
-# Add the repository to Apt sources:
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
+# # Add the repository to Apt sources:
+# echo \
+#   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+#   $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+#   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+# sudo apt-get update
 
-sudo apt-get install docker-ce containerd.io docker-buildx-plugin docker-compose-plugin -y
+# sudo apt-get install docker-ce containerd.io docker-buildx-plugin docker-compose-plugin -y
 
-sudo groupadd docker
-sudo usermod -aG docker cycy_menseau
+# sudo groupadd docker
+# sudo usermod -aG docker cycy_menseau
 
-gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
+# gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
 
-gcloud config set auth/impersonate_service_account ${google_service_account.registry_reader.email}
+# gcloud config set auth/impersonate_service_account ${google_service_account.registry_reader.email}
 
-newgrp docker
+# newgrp docker
 
-sudo docker pull \
-  us-east1-docker.pkg.dev/${var.gcp_project_name}/todo-app-image-repo/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91
+# sudo docker pull \
+#   us-east1-docker.pkg.dev/${var.gcp_project_name}/todo-app-image-repo/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91
 
-touch env.list
-echo "MYAPP_JDBC_USER=myuser
-MYAPP_JDBC_PASS=mysecretpassword
-MYAPP_JDBC_URL=jdbc:postgresql://${google_compute_instance.postgres-instance.network_interface.0.network_ip}:5432/todo_db" > env.list
+# touch env.list
+# echo "MYAPP_JDBC_USER=myuser
+# MYAPP_JDBC_PASS=mysecretpassword
+# MYAPP_JDBC_URL=jdbc:postgresql://${google_compute_instance.postgres-instance.network_interface.0.network_ip}:5432/todo_db" > env.list
 
-sudo docker run -p 8080:8080 \
-  --env-file env.list \
-  -d \
-  us-east1-docker.pkg.dev/${var.gcp_project_name}/todo-app-image-repo/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91
+# sudo docker run -p 8080:8080 \
+#   --env-file env.list \
+#   -d \
+#   us-east1-docker.pkg.dev/${var.gcp_project_name}/todo-app-image-repo/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91
 
-EOT
+# EOT
     # to check logs : sudo journalctl -u google-startup-scripts.service
 
     service_account {
@@ -70,7 +70,7 @@ EOT
     }
     allow_stopping_for_update = true
     metadata = {
-      ssh-keys = "${var.gce_ssh_user}:${var.gce_ssh_pub_key}",
+      ssh-keys = "${var.gce_ssh_user}:${var.gce_ssh_pub_key} \n${var.ansible_ssh_user}:${var.ansible_ssh_pub_key}",
     }
 }
 

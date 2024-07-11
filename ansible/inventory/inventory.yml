@@ -1,0 +1,8 @@
+myhosts:
+  hosts:
+    my_compute_instance:
+      ansible_ssh_private_key_file: ~/.ssh/ansible_ssh_key
+      ansible_host: my-instance
+      zone: us-east1-d
+  vars:
+    ansible_user: cycy_menseau

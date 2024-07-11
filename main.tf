@@ -84,6 +84,16 @@ variable gce_ssh_pub_key {
   default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCj31vynGaZ1BzmyWQVgSpdbM+gS44omU9RIqmtSFeDNLESfLCgheUUrgqkTat6gvJTlR5rHokkf6j4y8dWkmOayxtR9CRfW5OaDIgD+9aYVBxg1sI7GcMFlHZrLqHK+mKYg9GisJIMcE5cQZe9RjUB6JZhNBo5vOdtX1DTTgytsAXpyMTxyoHwtQ4lWZ2W7XY7u3upUXi5dZ3HrR+TZG5lSS1eA5WElXR100XBRL9UXpptUFnVoTjySPzSKMR/vR1P8ZVGtlokJGJZG/40CjTU7NfMG2dF+VN1pXFiVhlngxd2/Bo4b/NgMz06x1M0kiH8HLGqsi+05YoF6KHVQ0lf cycy_menseau"
 }
 
+variable ansible_ssh_user {
+  type = string
+  default = "cycy_menseau"
+}
+
+variable ansible_ssh_pub_key {
+  type = string
+  default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8YyXEyKYhTa/Oyj9MapYtgPCoD6aMqYpPZBCFm3uWqKSWZwYcZM5me8nAteJaBxy6LM7cCpJcvRFJQdi+GMCjsQpJirfO2efxvFKb2fPnmo8xclUgPGG30NgaabBXX8Se2MMCUQb1U+kFqPrp/H/AkHjwVyH4eR05kkY98sGLYIZBv/L0GqLXjetY+HgZd5nYzlWgS31E62sKXS9Q7zVwNmCck7tFD35MlkZfL5b+xrNmBgPAsr7ozUVeSoG+u1rEI9eLksuShGdDcWm6vAMTcQyE5NGq0GUp3woVfq8LXykfcqgzg39e5TX+vRKQHFKsXRr50rsQ1QY4j4ies8jj cycy_menseau"
+}
+
 resource "google_service_account" "app_instance_account" {
     account_id   = "my-compute-engine-account"
     display_name = "Service Account attached to Compute Engine"

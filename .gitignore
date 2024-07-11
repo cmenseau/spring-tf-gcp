@@ -67,3 +67,7 @@ terraform.rc
 target/
 
 !.mvn/wrapper/maven-wrapper.jar
+
+.venv
+.vscode/settings.json
+ansible/tf_ansible_vars_file.yml

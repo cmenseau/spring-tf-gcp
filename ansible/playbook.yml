@@ -60,7 +60,6 @@
      ansible.builtin.command: gcloud config set auth/impersonate_service_account {{ tf_docker_registry_service_account }}
      register: output
      changed_when: output.rc == 0
-     # ${google_service_account.registry_reader.email}
      # TODO: use  variable instead of docker repo / project name
 
 # sudo docker pull \
@@ -72,13 +71,14 @@
       source: pull
 
    - name: Create .env file to store postgres credentials
-     ansible.builtin.shell: |
-      touch env.list
-      echo "MYAPP_JDBC_USER=myuser
-      MYAPP_JDBC_PASS=mysecretpassword
-      MYAPP_JDBC_URL=jdbc:postgresql://{{ tf_postres_ip }}:5432/todo_db" > env.list
-     register: output
-     changed_when: output.rc == 0
+     ansible.builtin.blockinfile:
+      path: /env.list
+      create: true
+      mode: 600
+      content: |
+       MYAPP_JDBC_USER=myuser
+       MYAPP_JDBC_PASS=mysecretpassword
+       MYAPP_JDBC_URL=jdbc:postgresql://{{ tf_postres_ip }}:5432/todo_db
 
 # sudo docker run -p 8080:8080 \
 #   --env-file env.list \

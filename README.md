@@ -1,10 +1,11 @@
-Personal project to learn about :
+Personal project, initially to learn about :
 - Google Cloud Platform
 - Github Actions (CI/CD)
 - Terraform
 - Docker
+I also took on Ansible in the process because it felt useful.
 
-My goal here is to use these technologies related to DevOps / infra topics, rather than working on pure software development, to broaden my skills.
+The goal here is to use these technologies related to DevOps / infra topics, rather than working on pure software development, to broaden my skills.
 
 # TODO List & Ideas
 
@@ -18,13 +19,14 @@ My goal here is to use these technologies related to DevOps / infra topics, rath
 - [x] Use 2 different service accounts for Compute Engine instance and to get read access to Artifact Registry. The current use of a single service account is unclear
 - [x] Display build ID in the Java App
 - [x] Reorganize the 2 Dockerfiles 
+- [x] Move startup scripts of Compute instances away from metadata_startup_script with Ansible : for compute instances running the app
+- [ ] Move startup scripts of Compute instances away from metadata_startup_script with Ansible : for compute instances running the database
 - [ ] Best practices and hiding of passwords / identifiers
 - [ ] Create a cloud endpoint to make the API online : https://cloud.google.com/endpoints/docs/openapi/get-started-compute-engine-docker
 - [ ] Find a way to run the terraform command in Github Actions
 - [ ] Use Cloud Run
 - [ ] Find another way to pass DB credentials when deploying the new container (currently using env.list file)
-- [ ] See whether startup scripts of Compute instances can be moved away from metadata_startup_script
-- [ ] Related : on terraform apply : find a way to create the instance with the latest version (currently a hardcoded tag is used) ??
+- [ ] Find a way for Ansible on the instance to pull the latest git version (currently a hardcoded tag is used)
 
 # CI/CD pipeline with Github Actions
 
@@ -58,9 +60,9 @@ Build the image of the app, tag it, and push it to Google Cloud Artifact Registr
 
 Reuse google-github-actions/ssh-compute Action to connect via SSH to the Google Cloud Compute Instance hosting the app. Pull the container image from Artifact Registry. Stop the running container, and start the newly pulled one.
 
-# Configuring access between GCP and Github Actions
+# Configuring access between Github Actions and GCP Artifact Registry
 
-This is how I set up resources and IAM permissions in Google Cloud Platform for Github Action to access GCP and push to Artifact Registry. Reference : https://github.com/google-github-actions/auth
+This is how I set up resources and IAM permissions in Google Cloud Platform for Github Action to access GCP and push to Artifact Registry. [Official docs](https://github.com/google-github-actions/auth)
 
 I first did it manually using gcloud CLI and the console, then removed everything and managed to create the equivalent resources and permissions using Terraform.
 
@@ -68,7 +70,7 @@ I first did it manually using gcloud CLI and the console, then removed everythin
 
 Create an Artifact Registry named todo-app-image-repo, directly in the GCP console.
 
-Enable Direct Workload Identity Federation (reference : https://github.com/google-github-actions/auth with Workload Identity Federation through a Service Account)
+Enable Direct Workload Identity Federation (see [google-github-actions/auth](https://github.com/google-github-actions/auth) with Workload Identity Federation through a Service Account)
 
 We need a service account to use oauth2 access tokens, create it :
 ```
@@ -132,11 +134,11 @@ gcloud artifacts repositories add-iam-policy-binding todo-app-image-repo \
 gcloud reference page on artifact registry :
 https://cloud.google.com/sdk/gcloud/reference/artifacts/repositories/add-iam-policy-binding?hl=en
 
-If the service account isn't granted this role, you'll get this error : Permission "artifactregistry.repositories.uploadArtifacts" denied on resource "projects/java-with-db-terraform/locations/us-east1/repositories/todo-app-image-repo" (or it may not exist)
+If the service account isn't granted this role, you'll get this error : Permission "artifactregistry.repositories.uploadArtifacts" denied on resource "projects/java-with-db-terraform/locations/us-east1/repositories/todo-app-image-repo".
 
 ## 2. Programmatically with Terraform
 
-File : [artifact_registry.tf](./artifact_registry_terraform_setup/artifact_registry.tf)
+Terraform file : [artifact_registry.tf](./artifact_registry_terraform_setup/artifact_registry.tf)
 
 We'll create the same resources than with gcloud, but programmatically with IaC (Infrastructure As Code). We need to use :
 - Google provider
@@ -146,23 +148,23 @@ We'll create the same resources than with gcloud, but programmatically with IaC 
 - *google_service_account_iam_binding resource* : grant workloadIdentityUser IAM role to Workload Identity Pool Provider on the service account. The external resource authenticated by WIPP will be able to impersonate the service account
 - *google_artifact_registry_repository_iam_binding* resource : grant writing access with IAM to the service account on Artifact Registry. This will enable Github Actions workload to push Docker images to the Registry
 
-# Deploy on Compute Engine
-
-## Compute Engine instances
+# Setting up GCE instances in GCP
 
 I choose to use 2 instances : one hosting a PostgreSQL container, one hosting the app container.
 
-### PostgreSQL instance
+Because the instances need to fetch and install Docker from installation servers, I allowed traffic to the internet from default network by using the following resources in Terraform : *google_compute_router* and *google_compute_router_nat*.
 
-This is a Compute Instance created from an Ubuntu image with *google_compute_instance* resource. There's a startup script passed through metadata_startup_script which installs docker, pulls postgres latest image, create an SQL initialization script and starts the container.
+#### PostgreSQL instance
 
-Because the instance needs to fetch and install Docker from its installation servers, I allowed traffic to the internet from default network by using the following resources in Terraform : *google_compute_router* and *google_compute_router_nat*.
+This is a Compute Instance created from an Ubuntu image with *google_compute_instance* resource. Docker is installed, postgres latest image is pulled, an SQL initialization script runs on the container started using Ansible.
 
-### App instance
+#### App instance
 
-This is a Compute Instance created from an Ubuntu image with *google_compute_instance* resource. There's a startup script passed through metadata_startup_script which installs docker, auth docker to Artifact Registry, pulls app image, creates an env file for the database credentials and starts the container.
+This is a Compute Instance created from an Ubuntu image with *google_compute_instance* resource. Docker is installed and authenticated to Artifact Registry, app image is pulled, env file for the database credentials is created and the container is started using Ansible.
 
-## Pulling the app from Artifact Regitry and starting it
+## GCP IAM configuration on Terraform to allow GCE app instance to access Artifact Registry
+
+Terraform file : [main.tf](./main.tf)
 
 A Service Account is attached to the Compute Engine instance, it has permissions to impersonate a service account with read access to Artifact Registry. Here's how to set up these 2 accounts with IAM permissions :
 
@@ -215,8 +217,11 @@ With this setup, we can now impersonate the service account with read access to 
 gcloud config set auth/impersonate_service_account ${google_service_account.registry_reader.email}
 ```
 
+# Deploying on GCE on commit with Github Actions
 
-## Enabling SSH connexion, to update running container
+## Enabling SSH connexion, to update running container in GCE app instance
+
+### SSH keys
 
 The instance has SSH public key, it's used to check the SSH connexion initiated by Github Actions.
 
@@ -234,6 +239,8 @@ metadata = {
   ssh-keys = "${var.gce_ssh_user}:${var.gce_ssh_pub_key}",
 }
 ```
+
+### Allow Github Actions to access GCE app instance in GCP
 
 When Github Actions workload is authenticated by the Workload Identity Pool Provider, it uses the following service account : my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com. Thus, we need to grant it permissions to connect through SSH :
 1. permission to get Compute Engine instances on the project and to run commands using sudo : *compute.instanceAdmin.v1* role
@@ -258,7 +265,7 @@ resource "google_project_iam_binding" "binding-iap-access" {
 }
 
 resource "google_service_account_iam_binding" "admin-account-iam" {
-  service_account_id = google_service_account.service_account.name
+  service_account_id = google_service_account.app_instance_account.name
   role               = "roles/iam.serviceAccountUser"
   members = [
     "serviceAccount:my-github-service-account@java-with-db-terraform.iam.gserviceaccount.com",
@@ -285,18 +292,88 @@ gcloud projects get-iam-policy java-with-db-terraform  \
 ```
 </details>
 
-Reference :
+Reference : [1](https://antonputra.com/google/gcp-how-to-ssh-into-your-vm/#grant-iam-permissions-to-ssh), [2](https://github.com/google-github-actions/ssh-compute)
 
-https://antonputra.com/google/gcp-how-to-ssh-into-your-vm/#grant-iam-permissions-to-ssh
+# Using Ansible to configure GCE instances
 
-https://github.com/google-github-actions/ssh-compute
+Ansible is a configuration management tool, which can be understood as *SSH on steroids 🚀*.
+
+There is 3 main things to know about Ansible :
+- Ansible runs on a **control node**, which is the machine where it is installed.
+- Anisble works with an **inventory** : a file specifying the hosts, Ansible will manage the configuration of these machines
+- Ansible targets a configuration state defined in a **playbook**
+
+## Using Ansible to configure the Compute Instance running the app
+
+To deploy the small Java app on Compute Instance during the CI/CD, a few operations need to be run on the GCP machine : installing Docker and its dependencies, configuring Docker to authenticate to Artifact Registry, configuring gcloud etc.
+
+During my first iterations on these project, I used metadata_startup_script key with a BASH script to perform the above-mentionned operations. However, this has some serious drawbacks : it is a limited tool, which can be sufficient for basic cases but not for more advanced configuration, it forces the recreation of the GCE instance when the script is changed and the script is hardcoded directly in the .tf file. Another thing to consider is that handling infrastructure and configuration management are two very different topics, which change quite independently. So it is better to decouple these 2 preoccupations by focusing on infra with TF and configuration with Ansible. It would make it easier to switch from GCP GCE to AWS EC2 or Azure Virtual Machines.
+
+### Install Ansible, set up SSH keys
+Run `source .venv/bin/activate` to work in a local Python virtual env, run `deactivate` to exit the virtual env.
+
+Install Ansible on Ubuntu, and some packages :
+```
+python3 -m pip install --user ansible
+pip install requests
+pip install google-auth
+```
+
+The first thing to do is to generate a new SSH key and set it on the GCE instance in TF.
+
+### Register hosts, create the desired state (playbook) and run the tests
+
+I created an inventory.yml file with my GCE instance.
+
+My GCE instance doesn't have a public IP address : it is hidden bethind the Identity-Aware Proxy (IAP). So Ansible can't connect to it using simple SSH. However, Google Cloud provides the CLI command gcloud compute ssh which can handle IAP tunneling. Connecting to the hosts is possible with Ansible. I reused and adapted what was proposed online on these pages to use gcloud compute ssh : [Xebia](https://xebia.com/blog/how-to-tell-ansible-to-use-gcp-iap-tunneling/), [Stackoverflow](https://stackoverflow.com/questions/58996471/ansible-gcp-iap-tunnel).
+
+Ping the hosts (useful to troubleshoot SSH connection, check if the hosts are started) :
+```
+ansible myhosts -m ping -i inventory/inventory.yml
+```
+
+Once it works : 
+```
+my_compute_instance | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+```
+
+Now is time to set up the playbook, which will tell Ansible what's the desired configuration on my host !
+
+Run the playbook locally with `ansible-playbook playbook.yml`. 
+You can optionally add the options :
+- `--check` to simulate what would happen when the playbook is run (similar to `terraform plan` command).
+- `-v` / `-vvvv` to increase verbosity level of debug messages.
+- `--start-at-task=TASK_NAME` to start on a particular task.
+
+
+## Getting inputs for Ansible from Terraform outputs 
+
+Ansible needs to get some inputs from what Terraform defined. For example, it should know the Service Account to impersonate with gcloud, the name of the GCP project, the IP address of the DB etc...
+
+To do this, I used the following Terraform resource to create an intermediate file *tf_ansible_vars_file.yml* containing the outputs :
+```
+resource "local_file" "tf_ansible_vars_file_new" {
+  content = <<-DOC
+    # Ansible vars_file containing variable values from Terraform.
+    # Generated by Terraform mgmt configuration.
+
+    tf_postres_ip: ${google_compute_instance.postgres-instance.network_interface.0.network_ip}
+    tf_docker_registry_service_account: ${google_service_account.registry_reader.email}
+    tf_gcp_project_name: ${var.gcp_project_name}
+    DOC
+  filename = "./ansible/tf_ansible_vars_file.yml"
+}
+```
+
+To import these values in the Ansible playbook, specify `vars_files: - tf_ansible_vars_file.yml`. Values can be used with double curly braces : `{{ tf_postres_ip }}`
 
 # Running in a local environment
 
-Run this command to compose the full app setup : postgres DB + java app.
-```
-docker compose up --build
-```
+Run this command to compose the full app setup : postgres DB + java app : `docker compose up --build`
+
 App is available on http://localhost:8080
 
 To access the DB, logs etc :

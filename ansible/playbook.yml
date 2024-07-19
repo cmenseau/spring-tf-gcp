@@ -62,9 +62,6 @@
      changed_when: output.rc == 0
      # TODO: use  variable instead of docker repo / project name
 
-# sudo docker pull \
-#   us-east1-docker.pkg.dev/${var.gcp_project_name}/todo-app-image-repo/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91
-
    - name: Pull docker image
      community.docker.docker_image:
       name: us-east1-docker.pkg.dev/{{ tf_gcp_project_name }}/todo-app-image-repo/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91
@@ -80,11 +77,7 @@
        MYAPP_JDBC_PASS=mysecretpassword
        MYAPP_JDBC_URL=jdbc:postgresql://{{ tf_postres_ip }}:5432/todo_db
 
-# sudo docker run -p 8080:8080 \
-#   --env-file env.list \
-#   -d \
-#   us-east1-docker.pkg.dev/${var.gcp_project_name}/todo-app-image-repo/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91
-
+## TODO: use the latest image
    - name: Run docker container
      community.docker.docker_container:
       name: todo-app-java

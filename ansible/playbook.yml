@@ -67,7 +67,8 @@
    - name: Pull docker image
      community.docker.docker_image:
       source: pull
-      name: '{{ tf_region }}-docker.pkg.dev/{{ tf_gcp_project_name }}/{{ tf_docker_registry_name }}/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91'
+      name: "{{ tf_region }}-docker.pkg.dev/{{ tf_gcp_project_name }}/{{ tf_docker_registry_name }}\
+        /todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91"
 
    - name: Create .env file to store postgres credentials
      ansible.builtin.blockinfile:
@@ -83,8 +84,8 @@
    - name: Run docker container
      community.docker.docker_container:
       name: todo-app-java
-      image:
-       - '{{ tf_region }}-docker.pkg.dev/{{ tf_gcp_project_name }}/{{ tf_docker_registry_name }}/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91'
+      image: "{{ tf_region }}-docker.pkg.dev/{{ tf_gcp_project_name }}/{{ tf_docker_registry_name }}\
+        /todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91"
       env_file: /env.list
       detach: true
       published_ports:

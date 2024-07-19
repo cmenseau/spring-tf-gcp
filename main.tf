@@ -3,9 +3,20 @@ variable gcp_project_name {
   default = "java-with-db-terraform"
 }
 
+variable region {
+  type = string
+  default = "us-east1"
+}
+
 provider "google" {
     project     = var.gcp_project_name
-    region      = "us-east1"
+    region      = var.region
+}
+
+# repository is defined in another Terraform file because it can't be recreated easily 
+data "google_artifact_registry_repository" "my-repo" {
+  location      = var.region
+  repository_id = "todo-app-image-repo"
 }
 
 resource "google_compute_instance" "default" {
@@ -70,7 +81,7 @@ resource "google_service_account_iam_binding" "iam_binding" {
 }
 
 resource "google_artifact_registry_repository_iam_binding" "iam_binding_service_account_role" {
-  repository = "todo-app-image-repo"
+  repository = data.google_artifact_registry_repository.my-repo.repository_id
   role = "roles/artifactregistry.reader"
   members = [
     google_service_account.registry_reader.member,
@@ -215,6 +226,8 @@ resource "local_file" "tf_ansible_vars_file_new" {
 
     tf_postres_ip: ${google_compute_instance.postgres-instance.network_interface.0.network_ip}
     tf_docker_registry_service_account: ${google_service_account.registry_reader.email}
+    tf_docker_registry_name: ${data.google_artifact_registry_repository.my-repo.repository_id}
+    tf_region: ${var.region}
     tf_gcp_project_name: ${var.gcp_project_name}
     DOC
   filename = "./ansible/tf_ansible_vars_file.yml"

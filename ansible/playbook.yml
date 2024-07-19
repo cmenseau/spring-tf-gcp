@@ -12,6 +12,8 @@
        - tf_postres_ip is defined
        - tf_docker_registry_service_account is defined
        - tf_gcp_project_name is defined
+       - tf_docker_registry_name is defined
+       - tf_region is defined
       fail_msg: "tf_* variable usually defined in 'tf_ansible_vars_file.yml' is missing"
 
    - name: Ping my hosts
@@ -52,7 +54,7 @@
       update_cache: true
 
    - name: Configure gcloud as the credential helper for the GCP Docker Repository
-     ansible.builtin.command: gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
+     ansible.builtin.command: gcloud auth configure-docker {{ tf_region }}-docker.pkg.dev --quiet
      register: output
      changed_when: output.rc == 0
 
@@ -64,8 +66,8 @@
 
    - name: Pull docker image
      community.docker.docker_image:
-      name: us-east1-docker.pkg.dev/{{ tf_gcp_project_name }}/todo-app-image-repo/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91
       source: pull
+      name: '{{ tf_region }}-docker.pkg.dev/{{ tf_gcp_project_name }}/{{ tf_docker_registry_name }}/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91'
 
    - name: Create .env file to store postgres credentials
      ansible.builtin.blockinfile:
@@ -81,8 +83,9 @@
    - name: Run docker container
      community.docker.docker_container:
       name: todo-app-java
-      image: us-east1-docker.pkg.dev/{{ tf_gcp_project_name }}/todo-app-image-repo/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91
-      env_file: env.list
+      image:
+       - '{{ tf_region }}-docker.pkg.dev/{{ tf_gcp_project_name }}/{{ tf_docker_registry_name }}/todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91'
+      env_file: /env.list
       detach: true
       published_ports:
        - 8080:8080

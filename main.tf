@@ -229,6 +229,19 @@ resource "local_file" "tf_ansible_vars_file_new" {
     tf_docker_registry_name: ${data.google_artifact_registry_repository.my-repo.repository_id}
     tf_region: ${var.region}
     tf_gcp_project_name: ${var.gcp_project_name}
+    tf_image_name: ${var.artifact_registry_image_name}
+    tf_image_latest_tag: ${data.google_artifact_registry_docker_image.my_image.tags.0}
     DOC
   filename = "./ansible/tf_ansible_vars_file.yml"
+}
+
+variable artifact_registry_image_name {
+  type = string
+  default = "todo-app-java"
+}
+
+data "google_artifact_registry_docker_image" "my_image" {
+  location = data.google_artifact_registry_repository.my-repo.location
+  repository_id = data.google_artifact_registry_repository.my-repo.repository_id
+  image_name = var.artifact_registry_image_name
 }

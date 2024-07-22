@@ -3,6 +3,7 @@ Personal project, initially to learn about :
 - Github Actions (CI/CD)
 - Terraform
 - Docker
+
 I also took on Ansible in the process because it felt useful.
 
 The goal here is to use these technologies related to DevOps / infra topics, rather than working on pure software development, to broaden my skills.
@@ -20,13 +21,13 @@ The goal here is to use these technologies related to DevOps / infra topics, rat
 - [x] Display build ID in the Java App
 - [x] Reorganize the 2 Dockerfiles 
 - [x] Move startup scripts of Compute instances away from metadata_startup_script with Ansible : for compute instances running the app
-- [ ] Move startup scripts of Compute instances away from metadata_startup_script with Ansible : for compute instances running the database
+- [x] Find a way for Ansible on the instance to pull the latest git version (currently a hardcoded tag is used)
 - [ ] Best practices and hiding of passwords / identifiers
 - [ ] Create a cloud endpoint to make the API online : https://cloud.google.com/endpoints/docs/openapi/get-started-compute-engine-docker
 - [ ] Find a way to run the terraform command in Github Actions
 - [ ] Use Cloud Run
 - [ ] Find another way to pass DB credentials when deploying the new container (currently using env.list file)
-- [ ] Find a way for Ansible on the instance to pull the latest git version (currently a hardcoded tag is used)
+- [ ] Drawing with all resources, 2 Terraform states
 
 # CI/CD pipeline with Github Actions
 

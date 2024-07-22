@@ -62,13 +62,12 @@
      ansible.builtin.command: gcloud config set auth/impersonate_service_account {{ tf_docker_registry_service_account }}
      register: output
      changed_when: output.rc == 0
-     # TODO: use  variable instead of docker repo / project name
 
    - name: Pull docker image
      community.docker.docker_image:
       source: pull
       name: "{{ tf_region }}-docker.pkg.dev/{{ tf_gcp_project_name }}/{{ tf_docker_registry_name }}\
-        /todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91"
+        /{{ tf_image_name }}:{{ tf_image_latest_tag }}"
 
    - name: Create .env file to store postgres credentials
      ansible.builtin.blockinfile:
@@ -80,12 +79,11 @@
        MYAPP_JDBC_PASS=mysecretpassword
        MYAPP_JDBC_URL=jdbc:postgresql://{{ tf_postres_ip }}:5432/todo_db
 
-## TODO: use the latest image
    - name: Run docker container
      community.docker.docker_container:
-      name: todo-app-java
+      name: "{{ tf_image_name }}"
       image: "{{ tf_region }}-docker.pkg.dev/{{ tf_gcp_project_name }}/{{ tf_docker_registry_name }}\
-        /todo-app-java:main-0159a3cfa1d9b91af68bc0ddb08d3afb048e8a91"
+        /{{ tf_image_name }}:{{ tf_image_latest_tag }}"
       env_file: /env.list
       detach: true
       published_ports:

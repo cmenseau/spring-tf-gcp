@@ -385,11 +385,3 @@ SELECT * FROM todo;
 
 docker logs postgres
 ```
-
-
-TASK [Create init.sql file to store dB initialization] *****************************************************************************
-task path: /home/cmenseau/Java/spring-tf-gcp/ansible/playbook.yml:118
-fatal: [my-postgres-instance]: UNREACHABLE! => {"changed": false, "msg": "Failed to create temporary directory. In some cases, you may have been able to authenticate and did not have permissions on the target directory. Consider changing the remote tmp path in ansible.cfg to a path rooted in \"/tmp\", for more error information use -vvv. Failed command was: ( umask 77 && mkdir -p \"` echo /home/cycy_menseau/.ansible/tmp `\"&& mkdir \"` echo /home/cycy_menseau/.ansible/tmp/ansible-tmp-1721626643.1362388-23414-200040546869556 `\" && echo ansible-tmp-1721626643.1362388-23414-200040546869556=\"` echo /home/cycy_menseau/.ansible/tmp/ansible-tmp-1721626643.1362388-23414-200040546869556 `\" ), exited with result 1, stdout output: mkdir: cannot create directory ‘/home/cycy_menseau’: Permission denied\r\n", "unreachable": true}
-
-PLAY RECAP *************************************************************************************************************************
-my-postgres-instance       : ok=1    changed=0    unreachable=1    failed=0    skipped=0    rescued=0    ignored=0   

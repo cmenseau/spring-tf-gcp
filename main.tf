@@ -62,6 +62,16 @@ variable ansible_ssh_pub_key {
   default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8YyXEyKYhTa/Oyj9MapYtgPCoD6aMqYpPZBCFm3uWqKSWZwYcZM5me8nAteJaBxy6LM7cCpJcvRFJQdi+GMCjsQpJirfO2efxvFKb2fPnmo8xclUgPGG30NgaabBXX8Se2MMCUQb1U+kFqPrp/H/AkHjwVyH4eR05kkY98sGLYIZBv/L0GqLXjetY+HgZd5nYzlWgS31E62sKXS9Q7zVwNmCck7tFD35MlkZfL5b+xrNmBgPAsr7ozUVeSoG+u1rEI9eLksuShGdDcWm6vAMTcQyE5NGq0GUp3woVfq8LXykfcqgzg39e5TX+vRKQHFKsXRr50rsQ1QY4j4ies8jj cycy_menseau"
 }
 
+variable postgres_ssh_user {
+  type = string
+  default = "cycy_menseau"
+}
+
+variable postgres_ssh_pub_key {
+  type = string
+  default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyQCmhH9rrU0fH+RYFs058WQyALm926LixWcfiLJzApgIorKAvcsiYFxeQNTKQ31WA9xaY3FNbyW8xxQrsMlf7lwcT1m3s35PfJyaRN6BSxS4JPlZInY2q1FRZQ82erbgGzOkNp4K9C0cXt+xVmaDhmfH0MqbRN5BYBoT0AfL2F1JBHm018pHz8lIK6yClfZ2UiFFcrsO+hk2wgxzYV0pTw53/lsDr//KpIxiEp1bLJZxO5jNxZT6s7UcPnXpP1v7uI4BBf1KDQrs6dEECWabJ02NCNQ2LscWeXf2jY2vmkSXvlDbNy1nsTVxQl8iFkPQ4cz1BTQbXOrJ4vjgWMcID cycy_menseau"
+}
+
 resource "google_service_account" "app_instance_account" {
     account_id   = "my-compute-engine-account"
     display_name = "Service Account attached to Compute Engine"
@@ -153,50 +163,10 @@ resource "google_compute_instance" "postgres-instance" {
     network_interface {
         network = "default"
     }
-    metadata_startup_script = <<EOT
-# Add Docker's official GPG key:
-sudo apt-get update
-sudo apt-get install ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
-
-# Add the repository to Apt sources:
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
-
-sudo apt-get install docker-ce containerd.io docker-buildx-plugin docker-compose-plugin -y
-
-sudo groupadd docker
-sudo usermod -aG docker cycy_menseau
-
-newgrp docker
-docker pull postgres
-
-touch init.sql
-
-echo "CREATE TABLE todo (
-  id SERIAL NOT NULL PRIMARY KEY,
-  content VARCHAR(255)
-);
-INSERT INTO todo (content)
-VALUES
-    ('Inserted from TF'),
-    ('Also inserted from TF');" > init.sql
-
-docker run --name my-postgres -p 5432:5432 -e POSTGRES_USER=myuser -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_DB=todo_db \
-    -v ./init.sql:/docker-entrypoint-initdb.d/init.sql -d postgres
-
-EOT
-    # psql -h localhost -p 5432 -U myuser -d todo_db
-
-
-    # to check logs : sudo journalctl -u google-startup-scripts.service
-
     allow_stopping_for_update = true
+    metadata = {
+      ssh-keys = "${var.postgres_ssh_user}:${var.postgres_ssh_pub_key}",
+    }
 }
 
 # IP of instance containing postgresql

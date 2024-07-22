@@ -1,21 +1,7 @@
-- name: Installing Docker on my Google Compute instance
-  hosts: myhosts
+- name: Installing Docker on all GCE instances
+  hosts: allhosts
   become: true # run with sudo
-  vars_files:
-   - tf_ansible_vars_file.yml
-   # using outputs from Terraform
-
   tasks:
-   - name: Check mandatory variables imported from Terraform
-     ansible.builtin.assert:
-      that:
-       - tf_postres_ip is defined
-       - tf_docker_registry_service_account is defined
-       - tf_gcp_project_name is defined
-       - tf_docker_registry_name is defined
-       - tf_region is defined
-      fail_msg: "tf_* variable usually defined in 'tf_ansible_vars_file.yml' is missing"
-
    - name: Ping my hosts
      ansible.builtin.ping: # ping module
 
@@ -53,6 +39,112 @@
       name: docker-ce
       update_cache: true
 
+- name: Pull & run postgres on my Google Compute instance
+  hosts: mydbs
+  become: true # run with sudo
+  vars_files:
+   - tf_ansible_vars_file.yml
+   # using outputs from Terraform
+
+  tasks:
+   - name: Check mandatory variables imported from Terraform
+     ansible.builtin.assert:
+      that:
+       - tf_postres_ip is defined
+       - tf_docker_registry_service_account is defined
+       - tf_gcp_project_name is defined
+       - tf_docker_registry_name is defined
+       - tf_region is defined
+       - tf_image_name is defined
+       - tf_image_latest_tag is defined
+      fail_msg: "tf_* variable usually defined in 'tf_ansible_vars_file.yml' is missing"
+
+# replacing copy by delete + blockinfile because of:
+
+# fatal: [my-postgres-instance]: UNREACHABLE! => {"changed": false, "msg": "Failed to create temporary directory.
+# In some cases, you may have been able to authenticate and did not have permissions on the target directory.
+# Consider changing the remote tmp path in ansible.cfg to a path rooted in \"/tmp\",
+# for more error information use -vvv. Failed command was: ( umask 77 && mkdir -p \"` echo /home/cycy_menseau/.ansible/tmp `\"&& mkdir \"`
+# echo /home/cycy_menseau/.ansible/tmp/ansible-tmp-1721626643.1362388-23414-200040546869556 `\" && echo ansible-tmp-1721626643.1362388-23414-200040546869556=\"`
+# echo /home/cycy_menseau/.ansible/tmp/ansible-tmp-1721626643.1362388-23414-200040546869556 `\" ), exited with result 1, stdout output:
+# mkdir: cannot create directory ‘/home/cycy_menseau’: Permission denied\r\n", "unreachable": true}
+
+    #  ansible.builtin.copy:
+    #   src: ../docker-entrypoint-initdb.d/init.sql
+    #   dest: /init.sql
+    #   owner: root
+    #   group: root
+    #   mode: '0777'
+
+   - name: Delete existing init.sql file
+     ansible.builtin.file:
+      path: "/init.sql"
+      state: absent
+
+   - name: Create init.sql file to store dB initialization
+     ansible.builtin.blockinfile:
+      path: /init.sql
+      create: true
+      mode: '0777'
+      marker: ""
+      content: |
+       CREATE TABLE todo (
+          id SERIAL NOT NULL PRIMARY KEY,
+          content VARCHAR(255)
+        );
+
+        INSERT INTO todo (content)
+        VALUES
+            ('Homework'),
+            ('Hairdresser apointment'),
+            ('Yoga class');
+
+   - name: Create postgres-env.list file to store postgres credentials
+     ansible.builtin.blockinfile:
+      path: /postgres-env.list
+      create: true
+      mode: '0600'
+      content: |
+       POSTGRES_USER=myuser
+       POSTGRES_PASSWORD=mysecretpassword
+       POSTGRES_DB=todo_db
+
+   - name: Pull docker postgres image
+     community.docker.docker_image:
+      source: pull
+      name: postgres
+
+   - name: Run postgres image
+     community.docker.docker_container:
+      name: my-postgres
+      image: postgres
+      env_file: /postgres-env.list
+      detach: true
+      volumes:
+       - /init.sql:/docker-entrypoint-initdb.d/init.sql
+      published_ports:
+       - 5432:5432
+
+- name: Pulling container to my Google Compute instance
+  hosts: myservers
+  become: true # run with sudo
+  vars_files:
+   - tf_ansible_vars_file.yml
+   # using outputs from Terraform
+
+  tasks:
+   - name: Check mandatory variables imported from Terraform
+     ansible.builtin.assert:
+      that:
+       - tf_postres_ip is defined
+       - tf_docker_registry_service_account is defined
+       - tf_gcp_project_name is defined
+       - tf_docker_registry_name is defined
+       - tf_region is defined
+       - tf_image_name is defined
+       - tf_image_latest_tag is defined
+      fail_msg: "tf_* variable usually defined in 'tf_ansible_vars_file.yml' is missing"
+
    - name: Configure gcloud as the credential helper for the GCP Docker Repository
      ansible.builtin.command: gcloud auth configure-docker {{ tf_region }}-docker.pkg.dev --quiet
      register: output
@@ -63,7 +155,7 @@
      register: output
      changed_when: output.rc == 0
 
-   - name: Pull docker image
+   - name: Pull app docker image
      community.docker.docker_image:
       source: pull
       name: "{{ tf_region }}-docker.pkg.dev/{{ tf_gcp_project_name }}/{{ tf_docker_registry_name }}\
@@ -73,13 +165,13 @@
      ansible.builtin.blockinfile:
       path: /env.list
       create: true
-      mode: 600
+      mode: '0600'
       content: |
        MYAPP_JDBC_USER=myuser
        MYAPP_JDBC_PASS=mysecretpassword
        MYAPP_JDBC_URL=jdbc:postgresql://{{ tf_postres_ip }}:5432/todo_db
 
-   - name: Run docker container
+   - name: Run app docker container
      community.docker.docker_container:
       name: "{{ tf_image_name }}"
       image: "{{ tf_region }}-docker.pkg.dev/{{ tf_gcp_project_name }}/{{ tf_docker_registry_name }}\
